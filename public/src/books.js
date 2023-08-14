@@ -1,35 +1,54 @@
 function findAuthorById(authors, id) {
   // YOUR SOLUTION HERE
-  let authorObject = authors.find(author => author.id == id)
-  return authorObject;
+  let result = authors.filter((author) => author.id === id);
+  return result[0];
 }
-
 function findBookById(books, id) {
   // YOUR SOLUTION HERE
-  let bookObject = books.find(book => book.id == id)
-  return bookObject;
+  let result = books.filter((book) => book.id === id);
+  return result[0];
 }
-
-
 // NOTE: YOU DON'T HAVE TO EDIT THE FUNCTIONS BELOW
 function partitionBooksByBorrowedStatus(books) {
-  const returned = books.filter((book) => book.borrows[0].returned);
-  const unreturned = books.filter ((book) => !book.borrows[0].returned);
-  return [unreturned, returned];
+  let booksOut = [];
+  let booksIn = [];
+  for (let i = 0; i < books.length; i++) {
+    const book = books[i];
+    const borrowDetails = book.borrows;
+    if (borrowDetails.some((detail) => detail.returned === false)) {
+      booksOut.push(book);
+    } else {
+      booksIn.push(book);
+    }
+  }
+  let result = [booksOut, booksIn];
+  return result;
 }
-
 function getBorrowersForBook(book, accounts) {
-    const { borrows } = book;
-      const renters = borrows.map(({ id, returned })=> {
-            const account = accounts.find(account => account.id === id);
-      
-      return {
+  let result = [];
+  const borrowDetails = book.borrows;
+  let bookIds = borrowDetails.map((detail) => detail.id);
+  for (let i = 0; i < accounts.length; i++) {
+    let account = accounts[i];
+    let accountId = account.id;
+
+    if (bookIds.some((bookId) => bookId === accountId)) {
+      let borrowedStatus = borrowDetails.filter(
+        (detail) => detail.id === accountId
+      );
+      let accountWithStatus = {
         ...account,
-        returned,
+        returned: borrowedStatus[0].returned,
       };
-    });
+      result.push(accountWithStatus);
+    }
 
-
+    if (result.length === 10) {
+      return result;
+    }
+  }
+  return result;
+}
 module.exports = {
   findAuthorById,
   findBookById,

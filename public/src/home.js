@@ -1,88 +1,86 @@
 function getTotalBooksCount(books) {
-  // YOUR SOLUTION HERE
+  return books.length;
 }
 
 function getTotalAccountsCount(accounts) {
-  // YOUR SOLUTION HERE
+  return accounts.length;
 }
 
 function getBooksBorrowedCount(books) {
-  // YOUR SOLUTION HERE
-  // Hint: You can use the [`filter()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter) method here. 
-  // If you get stuck, feel free to take a look at this repl.it: https://replit.com/@thinkful/getBooksBorrowedCount#index.js
+  let total = 0;
+  for (let i = 0; i < books.length; i++) {
+    let bookBorrows = books[i].borrows;
+    if (bookBorrows.some((borrowInfo) => borrowInfo.returned === false))
+      total += 1;
+  }
+  return total;
 }
 
-// Tbis is a helper function that's called by other functions inside this file. You don't have to edit it.
-function _sortObjectByValues(obj) {
-  const keys = Object.keys(obj);
-  return keys.sort((keyA, keyB) => {
-    if (obj[keyA] > obj[keyB]) {
-      return -1;
-    } else if (obj[keyB] > obj[keyA]) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
+//helper function
+function sortAndSplice(input) {
+  return input
+    .sort((input1, input2) => input2.count - input1.count)
+    .splice(0, 5);
 }
+//helper function 
 
-// NOTE: YOU DON'T HAVE TO EDIT THE FUNCTIONS BELOW
 function getMostCommonGenres(books) {
-  const count = books.reduce((acc, { genre }) => {
-    if (acc[genre]) {
-      acc[genre] += 1;
-    } else {
-      acc[genre] = 1;
-    }
-
+  let beforeSort = books.reduce((acc, book) => {
+    const genre = book.genre;
+    if (!acc[genre]) acc[genre] = { name: genre, count: 1 };
+    else acc[genre].count++;
     return acc;
   }, {});
 
-  const sorted = _sortObjectByValues(count);
-  return sorted.map((name) => ({ name, count: count[name] })).slice(0, 5);
+  const result = Object.values(beforeSort);
+
+  return sortAndSplice(result);
 }
 
 function getMostPopularBooks(books) {
-  const groupById = books.reduce((acc, { id, borrows }) => {
-    acc[id] = borrows.length;
+  let beforeSort = books.reduce((acc, book) => {
+    const title = book.title;
+    const borrows = book.borrows;
+
+    if (!acc[title]) {
+      acc[title] = { name: title, count: borrows.length };
+    }
     return acc;
   }, {});
 
-  const sorted = _sortObjectByValues(groupById);
-  return sorted
-    .map((id) => {
-      const { title: name } = books.find(({ id: bookId }) => bookId === id);
-      return { name, count: groupById[id] };
-    })
-    .slice(0, 5);
+  const result = Object.values(beforeSort);
+
+  return sortAndSplice(result);
 }
 
 function getMostPopularAuthors(books, authors) {
-  const count = books.reduce((acc, { authorId, borrows }) => {
-    if (acc[authorId]) {
-      acc[authorId].push(borrows.length);
-    } else {
-      acc[authorId] = [borrows.length];
-    }
+  let result = [];
 
-    return acc;
-  }, {});
+  for (let i = 0; i < authors.length; i++) {
+    const author = authors[i];
+    const authorName = author.name;
+    const authorUId = author.id;
+    const { first, last } = authorName;
+    let bookMatches = books.filter((book) => {
+      if (authorUId === book.authorId) return book;
+    });
 
-  for (let id in count) {
-    const sum = count[id].reduce((a, b) => a + b);
-    count[id] = sum;
+    bookMatches.reduce((acc, book) => {
+      if (!acc[authorUId]) {
+        result.push(
+          (acc[authorUId] = {
+            name: `${first} ${last}`,
+            count: book.borrows.length,
+          })
+        );
+      } else {
+        acc[authorUId].count += book.borrows.length;
+      }
+      return acc;
+    }, {});
   }
 
-  const sorted = _sortObjectByValues(count);
-  return sorted
-    .map((authorId) => {
-      const {
-        name: { first, last },
-      } = authors.find(({ id }) => id === Number(authorId));
-      const name = `${first} ${last}`;
-      return { name, count: count[authorId] };
-    })
-    .slice(0, 5);
+  return sortAndSplice(result);
 }
 
 module.exports = {
